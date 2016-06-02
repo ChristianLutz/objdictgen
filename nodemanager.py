@@ -26,7 +26,7 @@ from gnosis.xml.pickle.util import setParanoia
 setParanoia(0)
 
 from node import *
-import eds_utils, gen_cfile
+import eds_utils, gen_cfile, ids_utils
 
 from types import *
 import os, re
@@ -347,6 +347,12 @@ class NodeManager:
     """
     def ExportCurrentToEDSFile(self, filepath):
         return eds_utils.GenerateEDSFile(filepath, self.CurrentNode)
+        
+    """
+    Export to an ids file and store it in a new buffer if no node edited
+    """
+    def ExportCurrentToIDSFile(self, filepath):
+        return ids_utils.GenerateIDSFile(filepath, self.CurrentNode)
     
     """
     Build the C definition of Object Dictionary for current node 

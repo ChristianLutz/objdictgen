@@ -153,9 +153,9 @@ except:
  ID_OBJDICTEDITHELPBAR,
 ] = [wx.NewId() for _init_ctrls in range(3)]
 
-[ID_OBJDICTEDITFILEMENUIMPORTEDS, ID_OBJDICTEDITFILEMENUEXPORTEDS, 
+[ID_OBJDICTEDITFILEMENUIMPORTEDS, ID_OBJDICTEDITFILEMENUEXPORTEDS, ID_OBJDICTEDITFILEMENUEXPORTIDS, 
  ID_OBJDICTEDITFILEMENUEXPORTC,
-] = [wx.NewId() for _init_coll_FileMenu_Items in range(3)]
+] = [wx.NewId() for _init_coll_FileMenu_Items in range(4)]
 
 [ID_OBJDICTEDITEDITMENUNODEINFOS, ID_OBJDICTEDITEDITMENUDS301PROFILE, 
  ID_OBJDICTEDITEDITMENUDS302PROFILE, ID_OBJDICTEDITEDITMENUOTHERPROFILE, 
@@ -194,6 +194,8 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
               kind=wx.ITEM_NORMAL, text=_('Import EDS file'))
         parent.Append(help='', id=ID_OBJDICTEDITFILEMENUEXPORTEDS,
               kind=wx.ITEM_NORMAL, text=_('Export to EDS file'))
+        parent.Append(help='', id=ID_OBJDICTEDITFILEMENUEXPORTIDS,
+              kind=wx.ITEM_NORMAL, text=_('Export to IDS file'))
         parent.Append(help='', id=ID_OBJDICTEDITFILEMENUEXPORTC,
               kind=wx.ITEM_NORMAL, text=_('Build Dictionary\tCTRL+B'))
         parent.AppendSeparator()
@@ -208,6 +210,8 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
               id=ID_OBJDICTEDITFILEMENUIMPORTEDS)
         self.Bind(wx.EVT_MENU, self.OnExportEDSMenu,
               id=ID_OBJDICTEDITFILEMENUEXPORTEDS)
+    	self.Bind(wx.EVT_MENU, self.OnExportIDSMenu,
+              id=ID_OBJDICTEDITFILEMENUEXPORTIDS)
         self.Bind(wx.EVT_MENU, self.OnExportCMenu,
               id=ID_OBJDICTEDITFILEMENUEXPORTC)
         self.Bind(wx.EVT_MENU, self.OnQuitMenu, id=wx.ID_EXIT)
@@ -492,6 +496,7 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 self.FileMenu.Enable(wx.ID_SAVE, True)
                 self.FileMenu.Enable(wx.ID_SAVEAS, True)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTEDS, True)
+                self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTIDS, True)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTC, True)
             else:
                 self.MenuBar.EnableTop(0, True)
@@ -504,6 +509,7 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 self.FileMenu.Enable(wx.ID_SAVE, False)
                 self.FileMenu.Enable(wx.ID_SAVEAS, False)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTEDS, False)
+                self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTIDS, False)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTC, False)
             else:
                 self.MenuBar.EnableTop(0, False)
@@ -696,6 +702,29 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 if extend in ("", "."):
                     filepath = path + ".eds"
                 result = self.Manager.ExportCurrentToEDSFile(filepath)
+                if not result:
+                    message = wx.MessageDialog(self, _("Export successful"), _("Information"), wx.OK|wx.ICON_INFORMATION)
+                    message.ShowModal()
+                    message.Destroy()
+                else:
+                    message = wx.MessageDialog(self, result, _("Error"), wx.OK|wx.ICON_ERROR)
+                    message.ShowModal()
+                    message.Destroy()
+            else:
+                message = wx.MessageDialog(self, _("\"%s\" is not a valid folder!")%os.path.dirname(filepath), _("Error"), wx.OK|wx.ICON_ERROR)
+                message.ShowModal()
+                message.Destroy()
+        dialog.Destroy()
+        
+    def OnExportIDSMenu(self, event):
+        dialog = wx.FileDialog(self, _("Choose a file"), os.getcwd(), self.Manager.GetCurrentNodeInfos()[0], _("IDS files (*.ids)|*.ids|All files|*.*"), wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dialog.ShowModal() == wx.ID_OK:
+            filepath = dialog.GetPath()
+            if os.path.isdir(os.path.dirname(filepath)):
+                path, extend = os.path.splitext(filepath)
+                if extend in ("", "."):
+                    filepath = path + ".ids"
+                result = self.Manager.ExportCurrentToIDSFile(filepath)
                 if not result:
                     message = wx.MessageDialog(self, _("Export successful"), _("Information"), wx.OK|wx.ICON_INFORMATION)
                     message.ShowModal()
