@@ -26,6 +26,11 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
 from types import ListType
 
+# Currently there are three reasons why an entry will not be exported to the xml file.
+# 1. considerSaveProperty is True and the save property itself is False
+# 2. entry index is not between 0x1000 <= entryIndex <= 0x1029 or 0x2000 <= entryIndex <= 0x5FFF
+# 3. emtries with the name Compatibility Entry will not be exported
+considerSaveProperty = True
 
 # Function that write an EDS file after generate it's content
 def WriteFile(filepath, content):
@@ -56,49 +61,53 @@ def GenerateFileContent(Node, filepath):
             paraNode = communicationParameterNode
         elif 0x2000 <= entryIndex <= 0x5FFF:
             paraNode = processParameterNode
-        else: 
+        else:
+            # Ignore all other nodes
             continue
         
         values = Node.GetEntry(entryIndex, compute = False)
         
         # If there is only one value, it's a VAR entryIndex
         if type(values) != ListType:
-            # Extract the informations of the first subindex
-            subentry_infos = Node.GetSubentryInfos(entryIndex, 0)
-            param_infos = Node.GetParamsEntry(entryIndex) #containing comment
-            if param_infos["save"]:
-                readSubEntryInfosAndAddToXml(Node, paraNode, entryIndex, subentry_infos, param_infos)
+            ExtractEntryInfos(Node, paraNode, entryIndex)
         else:
-            # Generate EDS informations for subindexes of the entryIndex in a separate text
             for subIndex, value in enumerate(values): #DONT REMOVE VALUE, Otherwise this will fail.
-                # Extract the informations of each subindex
-                subentry_infos = Node.GetSubentryInfos(entryIndex, subIndex)
-                param_infos = Node.GetParamsEntry(entryIndex, subIndex) #containing comment
-                if param_infos["save"]:
-                    readSubEntryInfosAndAddToXml(Node, paraNode, entryIndex, subentry_infos, param_infos, subIndex)
-                
+                ExtractEntryInfos(Node, paraNode, entryIndex, subIndex)
     
     # Return File Content
     return PrettyPrintNode(parentNode)
 
-def readSubEntryInfosAndAddToXml(Node, parentNode, entryIndex, subEntry, paramEntry, subindex=0):
+def ExtractEntryInfos(Node, paraNode, entryIndex, subIndex=0):
+    subentry_infos = Node.GetSubentryInfos(entryIndex, subIndex)
+    param_infos = Node.GetParamsEntry(entryIndex, subIndex) #containing comment
+    if (not considerSaveProperty) or param_infos["save"]:
+        ReadSubEntryInfosAndAddToXml(Node, paraNode, entryIndex, subentry_infos, param_infos, subIndex)
+
+def ReadSubEntryInfosAndAddToXml(Node, parentNode, entryIndex, subEntry, paramEntry, subindex):
     # If entry is not for the compatibility, generate informations for subindex
     if "name" in subEntry and subEntry["name"] != "Compatibility Entry":
-        typeSize = "0"
-        typeNumber = -1
-        if "type" in subEntry:
-            #typeValue = "0x%4.4X"%subentry_infos["type"]
-            typeInfo = Node.GetEntryInfos(subEntry["type"])
-            typeSize = "%d"%(typeInfo["size"]/8)
-            typeNumber = GetTypeNumber(Node.GetTypeName(subEntry["type"]))
-        
-        entryComment = ""
-        if "comment" in paramEntry:
-            entryComment = paramEntry["comment"]
+        typeSize, typeNumber = GetType(Node, subEntry)
+        entryComment = GetComment(paramEntry)
         
         AddParameterItem(parentNode, entryIndex, subindex, 
                          subEntry["access"], subEntry["name"],
                          entryComment, typeSize, typeNumber)
+
+def GetComment(paramEntry):
+    entryComment = ""
+    if "comment" in paramEntry:
+        entryComment = paramEntry["comment"]
+    return entryComment
+
+def GetType(Node, subEntry):
+    typeSize = "0"
+    typeNumber = -1
+    if "type" in subEntry:
+        #typeValue = "0x%4.4X"%subentry_infos["type"]
+        typeInfo = Node.GetEntryInfos(subEntry["type"])
+        typeSize = "%d"%(typeInfo["size"]/8)
+        typeNumber = GetTypeNumber(Node.GetTypeName(subEntry["type"]))
+    return typeSize, typeNumber
 
 def GetTypeNumber(typeName):
     if "INTEGER" in typeName:
