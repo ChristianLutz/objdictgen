@@ -97,7 +97,10 @@ def ComputeValue(type, value):
     elif type.startswith("real"):
         return "%f"%value, ""
     else:
-        return "0x%X"%value, "\t/* %s */"%str(value)
+        if value < 0:
+            return "-0x%X"%abs(value), "\t/* %s */"%str(abs(value))
+        else:
+            return "0x%X"%value, "\t/* %s */"%str(value)
 
 def WriteFile(filepath, content):
     cfile = open(filepath,"w")
