@@ -29,7 +29,7 @@ from types import ListType
 # Currently there are three reasons why an entry will not be exported to the xml file.
 # 1. considerSaveProperty is True and the save property itself is False
 # 2. entry index is not between 0x1000 <= entryIndex <= 0x1029 or 0x2000 <= entryIndex <= 0x5FFF
-# 3. emtries with the name Compatibility Entry will not be exported
+# 3. entries with the name Compatibility Entry will not be exported
 considerSaveProperty = True
 
 # Function that write an EDS file after generate it's content
@@ -44,6 +44,7 @@ def WriteFile(filepath, content):
 
 # Function that generate the EDS file content for the current node in the manager
 def GenerateFileContent(Node, filepath):
+    global considerSaveProperty
     
     # Retreiving lists of indexes defined
     entries = Node.GetIndexes()
@@ -59,8 +60,10 @@ def GenerateFileContent(Node, filepath):
         paraNode = processParameterNode
         if 0x1000 <= entryIndex <= 0x1029:
             paraNode = communicationParameterNode
+            considerSaveProperty = False
         elif 0x2000 <= entryIndex <= 0x5FFF:
             paraNode = processParameterNode
+            considerSaveProperty = True
         else:
             # Ignore all other nodes
             continue
