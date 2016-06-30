@@ -88,12 +88,12 @@ def GetValidTypeInfos(typename, items=[]):
             raise ValueError, _("""!!! %s isn't a valid type for CanFestival.""")%typename
     return typeinfos
 
-def ComputeValue(type, value):
-    if type == "visible_string":
+def ComputeValue(typeInfo, value):
+    if typeInfo == "visible_string":
         return "\"%s\""%value, ""
-    elif type == "domain":
+    elif typeInfo == "domain":
         return "\"%s\""%''.join(["\\x%2.2x"%ord(char) for char in value]), ""
-    elif type.startswith("real"):
+    elif typeInfo.startswith("real"):
         return "%f"%value, ""
     else:
         if value < 0:
@@ -116,7 +116,6 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
     """
     pointers_dict = {(Idx,Sidx):"VariableName",...}
     """
-    global type
     global internal_types
     global default_string_size
     
@@ -136,8 +135,6 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
     rangelist = [idx for idx in Node.GetIndexes() if 0 <= idx <= 0x260]
     listIndex = [idx for idx in Node.GetIndexes() if 0x1000 <= idx <= 0xFFFF]
     communicationlist = [idx for idx in Node.GetIndexes() if 0x1000 <= idx <= 0x11FF]
-    sdolist = [idx for idx in Node.GetIndexes() if 0x1200 <= idx <= 0x12FF]
-    pdolist = [idx for idx in Node.GetIndexes() if 0x1400 <= idx <= 0x1BFF]
     variablelist = [idx for idx in Node.GetIndexes() if 0x2000 <= idx <= 0xBFFF]
 
 #-------------------------------------------------------------------------------
@@ -184,7 +181,6 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
     mappedVariableContent = ""
     pointedVariableContent = ""
     strDeclareHeader = ""
-    strDeclareCallback = ""
     indexContents = {}
     indexCallbacks = {}
     for index in listIndex:
