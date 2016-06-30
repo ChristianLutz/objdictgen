@@ -1,9 +1,9 @@
-from types import *
+from types import StringType, UnicodeType
 
 import wx
 
-from node import OD_Subindex, OD_MultipleSubindexes, OD_IdenticalSubindexes, OD_IdenticalIndexes
-from commondialogs import *
+from node import OD_MultipleSubindexes, OD_IdenticalSubindexes, OD_IdenticalIndexes
+from commondialogs import CommunicationDialog, MapVariableDialog, NodeInfosDialog, UserTypeDialog
 
 class NodeEditorTemplate:
     
