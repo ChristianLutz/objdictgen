@@ -26,7 +26,7 @@ from gnosis.xml.pickle.util import setParanoia
 setParanoia(0)
 
 from node import *
-import eds_utils, gen_cfile, ids_utils
+import eds_utils, gen_cfile, ids_utils, gen_parfile
 
 from types import *
 import os, re
@@ -347,7 +347,7 @@ class NodeManager:
     """
     def ExportCurrentToEDSFile(self, filepath):
         return eds_utils.GenerateEDSFile(filepath, self.CurrentNode)
-        
+    
     """
     Export to an ids file and store it in a new buffer if no node edited
     """
@@ -360,6 +360,12 @@ class NodeManager:
     def ExportCurrentToCFile(self, filepath):
         if self.CurrentNode:
             return gen_cfile.GenerateFile(filepath, self.CurrentNode)
+    
+    """
+    Export to parameter file and store it in a new buffer if no node edited
+    """
+    def ExportCurrentToParameterFile(self, filepath):
+        return gen_parfile.GenerateParameterFile(filepath, self.CurrentNode)
 
 #-------------------------------------------------------------------------------
 #                        Add Entries to Current Functions

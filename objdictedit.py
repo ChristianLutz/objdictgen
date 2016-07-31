@@ -154,8 +154,8 @@ except:
 ] = [wx.NewId() for _init_ctrls in range(3)]
 
 [ID_OBJDICTEDITFILEMENUIMPORTEDS, ID_OBJDICTEDITFILEMENUEXPORTEDS, ID_OBJDICTEDITFILEMENUEXPORTIDS, 
- ID_OBJDICTEDITFILEMENUEXPORTC,
-] = [wx.NewId() for _init_coll_FileMenu_Items in range(4)]
+ ID_OBJDICTEDITFILEMENUEXPORTC, ID_OBJDICTEDITFILEMENUEXPORTPAR,
+] = [wx.NewId() for _init_coll_FileMenu_Items in range(5)]
 
 [ID_OBJDICTEDITEDITMENUNODEINFOS, ID_OBJDICTEDITEDITMENUDS301PROFILE, 
  ID_OBJDICTEDITEDITMENUDS302PROFILE, ID_OBJDICTEDITEDITMENUOTHERPROFILE, 
@@ -198,6 +198,8 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
               kind=wx.ITEM_NORMAL, text=_('Export to IDS file'))
         parent.Append(help='', id=ID_OBJDICTEDITFILEMENUEXPORTC,
               kind=wx.ITEM_NORMAL, text=_('Build Dictionary\tCTRL+B'))
+        parent.Append(help='', id=ID_OBJDICTEDITFILEMENUEXPORTPAR,
+              kind=wx.ITEM_NORMAL, text=_('Build Parameter List\tCTRL+P'))
         parent.AppendSeparator()
         parent.Append(help='', id=wx.ID_EXIT,
               kind=wx.ITEM_NORMAL, text=_('Exit'))
@@ -210,10 +212,12 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
               id=ID_OBJDICTEDITFILEMENUIMPORTEDS)
         self.Bind(wx.EVT_MENU, self.OnExportEDSMenu,
               id=ID_OBJDICTEDITFILEMENUEXPORTEDS)
-    	self.Bind(wx.EVT_MENU, self.OnExportIDSMenu,
+        self.Bind(wx.EVT_MENU, self.OnExportIDSMenu,
               id=ID_OBJDICTEDITFILEMENUEXPORTIDS)
         self.Bind(wx.EVT_MENU, self.OnExportCMenu,
               id=ID_OBJDICTEDITFILEMENUEXPORTC)
+        self.Bind(wx.EVT_MENU, self.OnExportParMenu,
+              id=ID_OBJDICTEDITFILEMENUEXPORTPAR)
         self.Bind(wx.EVT_MENU, self.OnQuitMenu, id=wx.ID_EXIT)
 
     def _init_coll_EditMenu_Items(self, parent):
@@ -498,6 +502,7 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTEDS, True)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTIDS, True)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTC, True)
+                self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTPAR, True)
             else:
                 self.MenuBar.EnableTop(0, True)
                 self.MenuBar.EnableTop(1, True)
@@ -511,6 +516,7 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTEDS, False)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTIDS, False)
                 self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTC, False)
+                self.FileMenu.Enable(ID_OBJDICTEDITFILEMENUEXPORTPAR, False)
             else:
                 self.MenuBar.EnableTop(0, False)
                 self.MenuBar.EnableTop(1, False)
@@ -762,6 +768,28 @@ class objdictedit(wx.Frame, NodeEditorTemplate):
                 message.Destroy()
         dialog.Destroy()
 
+    def OnExportParMenu(self, event):
+        dialog = wx.FileDialog(self, _("Choose a file"), os.getcwd(), self.Manager.GetCurrentNodeInfos()[0],  _("parameter files (*.par)|*.par|All files|*.*"), wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+        if dialog.ShowModal() == wx.ID_OK:
+            filepath = dialog.GetPath()
+            if os.path.isdir(os.path.dirname(filepath)):
+                path, extend = os.path.splitext(filepath)
+                if extend in ("", "."):
+                    filepath = path + ".par"
+                result = self.Manager.ExportCurrentToParameterFile(filepath)
+                if not result:
+                    message = wx.MessageDialog(self, _("Export successful"), _("Information"), wx.OK|wx.ICON_INFORMATION)
+                    message.ShowModal()
+                    message.Destroy()
+                else:
+                    message = wx.MessageDialog(self, result, _("Error"), wx.OK|wx.ICON_ERROR)
+                    message.ShowModal()
+                    message.Destroy()
+            else:
+                message = wx.MessageDialog(self, _("\"%s\" is not a valid folder!")%os.path.dirname(filepath), _("Error"), wx.OK|wx.ICON_ERROR)
+                message.ShowModal()
+                message.Destroy()
+        dialog.Destroy()
 
 #-------------------------------------------------------------------------------
 #                               Exception Handler
