@@ -190,10 +190,13 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
         texts["EntryName"] = entry_infos["name"].encode('ascii','replace')
         values = Node.GetEntry(index)
         callbacks = Node.HasEntryCallbacks(index)
+        texts["constPrefix"] = ""
         if index in variablelist:
             strIndex += "\n/* index 0x%(index)04X :   Mapped variable %(EntryName)s */\n"%texts
+            texts["constPrefix"] = "const "
         else:
             strIndex += "\n/* index 0x%(index)04X :   %(EntryName)s. */\n"%texts
+            texts["constPrefix"] = ""
         
         # Entry type is VAR
         if not isinstance(values, ListType):
@@ -214,7 +217,7 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
                 strDeclareHeader += "extern %(subIndexType)s %(name)s%(suffixe)s;\t\t/* Mapped at index 0x%(index)04X, subindex 0x00*/\n"%texts
                 mappedVariableContent += "%(subIndexType)s %(name)s%(suffixe)s = %(value)s;\t\t/* Mapped at index 0x%(index)04X, subindex 0x00 */\n"%texts
             else:
-                strIndex += "                    %(subIndexType)s %(NodeName)s_obj%(index)04X%(suffixe)s = %(value)s;%(comment)s\n"%texts
+                strIndex += "                    %(constPrefix)s %(subIndexType)s %(NodeName)s_obj%(index)04X%(suffixe)s = %(value)s;%(comment)s\n"%texts
             values = [values]
         else:
             subentry_infos = Node.GetSubentryInfos(index, 0)
@@ -225,7 +228,7 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
             else:
                 texts["value"] = values[0]
             texts["subIndexType"] = typeinfos[0]
-            strIndex += "                    %(subIndexType)s %(NodeName)s_highestSubIndex_obj%(index)04X = %(value)d; /* number of subindex - 1*/\n"%texts
+            strIndex += "                    %(constPrefix)s %(subIndexType)s %(NodeName)s_highestSubIndex_obj%(index)04X = %(value)d; /* number of subindex - 1*/\n"%texts
             
             # Entry type is RECORD
             if entry_infos["struct"] & OD_IdenticalSubindexes:
@@ -256,7 +259,7 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
                             mappedVariableContent += "    %s%s%s\n"%(value, sep, comment)
                     mappedVariableContent += "  };\n"
                 else:
-                    strIndex += "                    %(subIndexType)s%(type_suffixe)s %(NodeName)s_obj%(index)04X[] = \n                    {\n"%texts
+                    strIndex += "                    %(constPrefix)s %(subIndexType)s%(type_suffixe)s %(NodeName)s_obj%(index)04X[] = \n                    {\n"%texts
                     for subIndex, value in enumerate(values):
                         sep = ","
                         if subIndex > 0:
@@ -286,7 +289,7 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
                             strDeclareHeader += "extern %(subIndexType)s %(parent)s_%(name)s%(suffixe)s;\t\t/* Mapped at index 0x%(index)04X, subindex 0x%(subIndex)02X */\n"%texts
                             mappedVariableContent += "%(subIndexType)s %(parent)s_%(name)s%(suffixe)s = %(value)s;\t\t/* Mapped at index 0x%(index)04X, subindex 0x%(subIndex)02X */\n"%texts
                         else:
-                            strIndex += "                    %(subIndexType)s %(NodeName)s_obj%(index)04X_%(name)s%(suffixe)s = %(value)s;%(comment)s\n"%texts
+                            strIndex += "                    %(constPrefix)s %(subIndexType)s %(NodeName)s_obj%(index)04X_%(name)s%(suffixe)s = %(value)s;%(comment)s\n"%texts
         
         # Generating Dictionary C++ entry
         if callbacks:
@@ -302,7 +305,7 @@ def GenerateFileContent(Node, headerfilepath, pointers_dict = {}):
             indexCallbacks[index] = "*callbacks = %s_callbacks; "%name
         else:
             indexCallbacks[index] = ""
-        strIndex += "                    subindex %(NodeName)s_Index%(index)04X[] = \n                     {\n"%texts
+        strIndex += "                    %(constPrefix)s subindex %(NodeName)s_Index%(index)04X[] = \n                     {\n"%texts
         for subIndex in xrange(len(values)):
             subentry_infos = Node.GetSubentryInfos(index, subIndex)
             if subIndex < len(values) - 1:
